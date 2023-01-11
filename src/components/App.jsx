@@ -11,30 +11,38 @@ export const App = () =>{
   const [contacts, setContacts] = useLocalStorage('contacts', []);
   const [filter, setFilter] = useState('');
 
-  const addContacts = data => {
-    
-    const { contactName: name, contactNumber: number } = data;
+    const addContact = data => {
+    data.preventDefault();
+    const {
+      elements: { name, number },
+    } = data.currentTarget;
 
-    const contact = {
+    let addedContact = {
+      name: name.value,
+      number: number.value,
       id: nanoid(),
-      name: name,
-      number: number.toString(),
     };
 
-    const contactsInclude = contacts.some(elem => elem.name === name);
+    let isAdded = false;
 
-    if (contactsInclude) {
-      alert(`${name} is already in contacts`);
-      return;
+    contacts.map(contact => {
+      if (contact.name === name.value) {
+        alert(`${name.value} is already in contacts`);
+        return (isAdded = true);
+      }
+      return isAdded;
+    });
+
+  
+    if (!isAdded) {
+      setContacts([addedContact, ...contacts]);
+      data.currentTarget.reset();
     }
-
-    setContacts(prevState => [...prevState, contact]);
   };
 
+
   const deleteContact = contactId => {
-    setContacts(prevState =>
-      prevState.filter(contact => contact.id !== contactId)
-    );
+    setContacts(contacts.filter(contact => contact.id !== contactId));
   };
 
   const changeFilter = event => {
@@ -53,18 +61,16 @@ export const App = () =>{
     }
   };
 
-  const visibleContacts = getVisibleContacts();
-
   return (
     <Box px={20} pt={10}>
       <h1>Phonebook</h1>
-      <ContactForm onSubmit={addContacts} contacts={contacts} />
+      <ContactForm addContact={addContact} />
 
       {contacts.length !== 0 && (
         <Box mt={20}>
           <h2>Contacts</h2>
           <Filter value={filter} onChange={changeFilter} />
-          <ContactList contacts={visibleContacts} onDelete={deleteContact} />
+          <ContactList contacts={getVisibleContacts()} onDelete={deleteContact} />
         </Box>
       )}
     </Box>
